@@ -1,49 +1,50 @@
-import {MAPS,BOT_LEVELS,makePlayer,stepPlayer,rects,clearSight,canTag,TOOLS,clamp,bestSpawn} from '../shared/rules.js';
-const GRID=3.4;
-function cellKey(x,z){return `${x},${z}`;}
-function astar(source,dest,colliders){
-  const toCell=v=>clamp(Math.round(v/GRID),-9,9);
-  const sx=toCell(source.x),sz=toCell(source.z),tx=toCell(dest.x),tz=toCell(dest.z);
-  const start=cellKey(sx,sz),goal=cellKey(tx,tz),queue=[{x:sx,z:sz}];const seen=new Map([[start,null]]);
-  const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-  let closest={x:sx,z:sz,d:Infinity};
-  for(let i=0;i<queue.length&&i<350;i++){
-    const at=queue[i],d=Math.abs(at.x-tx)+Math.abs(at.z-tz);
-    if(d<closest.d)closest={...at,d};if(d===0)break;
-    for(const [dx,dz] of dirs){const nx=at.x+dx,nz=at.z+dz,k=cellKey(nx,nz);if(Math.abs(nx)>9||Math.abs(nz)>9||seen.has(k))continue;
-      const x=nx*GRID,z=nz*GRID;if(colliders.some(b=>x>b.x-b.w/2-.55&&x<b.x+b.w/2+.55&&z>b.z-b.d/2-.55&&z<b.z+b.d/2+.55))continue;
-      seen.set(k,cellKey(at.x,at.z));queue.push({x:nx,z:nz});
-    }
-  }
-  const end=cellKey(closest.x,closest.z),path=[];let k=end;
-  while(k&&k!==start&&path.length<100){const [x,z]=k.split(',').map(Number);path.push({x:x*GRID,z:z*GRID});k=seen.get(k);}
-  return path.reverse();
+import {MAPS,BOT_LEVELS,WEAPONS,makePlayer,stepPlayer,rects,clearSight,clamp,bestSpawn,revive,tickCombat,fireAttempt,raycastCombat,dealDamage,offMap} from '../shared/rules.js';
+const GRID=4;
+function pathfind(from,to,colliders,half){
+ const bound=Math.floor((half-3)/GRID),cell=n=>clamp(Math.round(n/GRID),-bound,bound),sx=cell(from.x),sz=cell(from.z),tx=cell(to.x),tz=cell(to.z);
+ const encode=(x,z)=>`${x}:${z}`,start=encode(sx,sz),queue=[[sx,sz]],visited=new Map([[start,null]]),dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ let best=[sx,sz],bestDist=Infinity;
+ for(let i=0;i<queue.length&&i<850;i++){const [x,z]=queue[i],d=Math.abs(x-tx)+Math.abs(z-tz);if(d<bestDist){best=[x,z];bestDist=d;}if(d===0)break;
+  for(const [dx,dz] of dirs){const xx=x+dx,zz=z+dz,k=encode(xx,zz);if(Math.abs(xx)>bound||Math.abs(zz)>bound||visited.has(k))continue;
+   if(colliders.some(c=>Math.abs(xx*GRID-c.x)<c.w/2+.7&&Math.abs(zz*GRID-c.z)<c.d/2+.7))continue;
+   visited.set(k,encode(x,z));queue.push([xx,zz]);}}
+ const out=[];let pos=encode(...best);while(pos!==start&&pos&&out.length<120){const [x,z]=pos.split(':').map(Number);out.push({x:x*GRID,z:z*GRID});pos=visited.get(pos);}return out.reverse();
 }
 export class AIManager{
-  constructor(mapId='yard',difficulty='normal',count=3){this.mapId=mapId;this.colliders=rects(mapId);this.difficulty=BOT_LEVELS[difficulty]||BOT_LEVELS.normal;this.bots=[];for(let i=0;i<count;i++)this.add(i);}
-  add(index){const sp=MAPS[this.mapId].spawn[(index+1)%MAPS[this.mapId].spawn.length],p=makePlayer(...sp);const b={id:`bot-${index}`,name:`BOT ${String(index+1).padStart(2,'0')}`,color:['#ffae77','#ad97ff','#f18ab3','#f3d47a','#84edbf'][index%5],p,tool:['spark','prism','pulse'][index%3],route:[],routeTime:0,think:0,strafe:1};this.bots.push(b);}
-  update(dt,player,tagPlayer,onPlayerTagged){
-    for(const bot of this.bots){const b=bot.p;if(b.respawn>0){b.respawn-=dt;if(b.respawn<=0){const spawn=bestSpawn(this.mapId,[player,...this.bots.filter(v=>v!==bot).map(v=>v.p)]);Object.assign(b,makePlayer(spawn.x,spawn.z),{score:b.score,outs:b.outs});}continue;}
-      const d=Math.hypot(b.x-player.x,b.z-player.z),visible=clearSight(b.x,b.z,player.x,player.z,this.colliders,b.y+1.4,player.y+1.4);
-      bot.routeTime-=dt;bot.think-=dt;
-      if(bot.routeTime<=0){bot.route=astar(b,player,this.colliders);bot.routeTime=.8+Math.random()*.8;bot.strafe=Math.random()<.5?-1:1;}
-      let target=player;
-      if(!visible&&bot.route.length){while(bot.route.length>1&&Math.hypot(b.x-bot.route[0].x,b.z-bot.route[0].z)<2.1)bot.route.shift();target=bot.route[0];}
-      const angle=Math.atan2(-(target.x-b.x),-(target.z-b.z));
-      const diff=Math.atan2(Math.sin(angle-b.yaw),Math.cos(angle-b.yaw));
-      b.yaw+=clamp(diff,-dt*(3.1*this.difficulty.speed),dt*(3.1*this.difficulty.speed));
-      b.pitch=0;
-      const aiming=visible&&d<(TOOLS[bot.tool].range*.8);
-      const input={forward:aiming&&d<8?-.35:1,strafe:aiming?bot.strafe*.3:0,jump:Math.random()<dt*.15,slide:Math.random()<dt*.11&&d>7,sprint:true};
-      stepPlayer(b,input,dt,this.colliders);
-      b.energy=Math.max(0,b.energy);
-      if(aiming&&bot.think<=0&&b.cooldown<=0&&b.energy>=TOOLS[bot.tool].energy){
-        bot.think=this.difficulty.reaction+Math.random()*.25;
-        const hit=Math.random()<this.difficulty.accuracy;
-        b.cooldown=TOOLS[bot.tool].cooldown;b.energy-=TOOLS[bot.tool].energy;
-        if(hit&&canTag(b,player,TOOLS[bot.tool],this.colliders))onPlayerTagged(bot,TOOLS[bot.tool].shield);
-      }
+ constructor(mapId='yard',difficulty='normal',count=3){this.mapId=mapId;this.colliders=rects(mapId);this.level=BOT_LEVELS[difficulty]||BOT_LEVELS.normal;this.bots=[];for(let i=0;i<count;i++)this.add(i);}
+ add(i){const pos=MAPS[this.mapId].spawn[(i+1)%8],weapons=Object.keys(WEAPONS).filter(k=>WEAPONS[k].kind!=='HG'),primary=weapons[i%weapons.length];
+  const p=makePlayer(pos[0],pos[1],primary,'P92');p.id=`bot-${i}`;
+  this.bots.push({id:p.id,name:`BOT ${String(i+1).padStart(2,'0')}`,p,route:[],routeTime:0,think:this.level.reaction*(.3+Math.random()),strafing:i%2?1:-1});
+ }
+ update(dt,user,now,onEvent=()=>{}){
+  const all=[user,...this.bots.map(b=>b.p)];
+  for(const bot of this.bots){const p=bot.p;tickCombat(p,dt);
+   if(p.respawn>0){p.respawn=Math.max(0,p.respawn-dt);if(p.respawn<=0){const spawn=bestSpawn(this.mapId,all.filter(a=>a!==p));revive(p,spawn.x,spawn.z);p.id=bot.id;}continue;}
+   if(offMap(p,this.mapId)){p.respawn=5;p.deaths++;p.streak=0;continue;}
+   const rivals=all.filter(t=>t!==p&&t.respawn<=0);
+   if(!rivals.length){stepPlayer(p,{},dt,this.colliders,this.mapId);continue;}
+   rivals.sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z));const target=rivals[0];
+   const d=Math.hypot(target.x-p.x,target.z-p.z),visible=clearSight(p.x,p.z,target.x,target.z,this.colliders,p.y+1.5,target.y+1.5);
+   bot.routeTime-=dt;
+   // Difficulty reaction is the delay before an AI notices a visible rival,
+   // not a global cap on the weapon's approved firing rate.
+   if(!visible)bot.think=this.level.reaction;
+   else bot.think=Math.max(0,bot.think-dt);
+   if(bot.routeTime<=0){bot.route=pathfind(p,target,this.colliders,MAPS[this.mapId].half);bot.routeTime=.6+Math.random()*.7;bot.strafing=Math.random()<.5?-1:1;}
+   let waypoint=target;if(!visible&&bot.route.length){while(bot.route.length>1&&Math.hypot(p.x-bot.route[0].x,p.z-bot.route[0].z)<2.8)bot.route.shift();waypoint=bot.route[0];}
+   const toYaw=Math.atan2(-(waypoint.x-p.x),-(waypoint.z-p.z)),diff=Math.atan2(Math.sin(toYaw-p.yaw),Math.cos(toYaw-p.yaw));p.yaw+=clamp(diff,-dt*3*this.level.speed,dt*3*this.level.speed);
+   const dy=target.y+1.15-(p.y+1.6);p.pitch=clamp(Math.atan2(dy,Math.max(1,d)),-1,1);
+   const around=visible&&d<16;
+   const input={forward:around?(d<7?-.25:.15):1,strafe:around?bot.strafing*.7:0,sprint:!around,ads:visible&&d>8,slide:Math.random()<dt*.09&&d>12};
+   stepPlayer(p,input,dt,this.colliders,this.mapId);
+   const w=WEAPONS[p.primary];if(visible&&d<Math.min(85,w.kind==='SG'?19:90)&&bot.think<=0){
+    const shot=fireAttempt(p);if(shot.ok){
+     const ray=raycastCombat(p,rivals,shot.weapon,this.colliders);
+     for(const [victim,damage] of ray.hits){if(Math.random()>this.level.accuracy)continue;
+      const res=dealDamage(victim,p,damage,all,now);onEvent({type:res.killed?'kill':'hit',source:bot.name,target:victim===user?'플레이어':this.bots.find(b=>b.p===victim)?.name,damage});
+     }
     }
+   }
   }
-  tagBot(bot,damage,player){if(!bot||bot.p.respawn>0)return false;bot.p.shield-=damage;if(bot.p.shield<=0){bot.p.respawn=3;bot.p.shield=100;player.score++;bot.p.outs++;return 'out';}return true;}
+ }
 }

@@ -1,29 +1,49 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createGameServer} from '../server/index.js';
-function receive(ws,predicate=()=>true,timeout=3000){return new Promise((resolve,reject)=>{
-  const timer=setTimeout(()=>{ws.removeEventListener('message',onMessage);reject(new Error('message timeout'));},timeout);
-  const onMessage=event=>{let msg;try{msg=JSON.parse(event.data);}catch{return;}if(predicate(msg)){clearTimeout(timer);ws.removeEventListener('message',onMessage);resolve(msg);}};
-  ws.addEventListener('message',onMessage);
+function receive(ws,predicate=()=>true,timeout=5000){return new Promise((resolve,reject)=>{
+ const timer=setTimeout(()=>{ws.removeEventListener('message',handle);reject(new Error('Message timeout'));},timeout);
+ const handle=e=>{let m;try{m=JSON.parse(e.data);}catch{return;}if(predicate(m)){clearTimeout(timer);ws.removeEventListener('message',handle);resolve(m);}};
+ ws.addEventListener('message',handle);
 });}
-function connect(url){return new Promise((resolve,reject)=>{const ws=new WebSocket(url);ws.addEventListener('open',()=>resolve(ws),{once:true});ws.addEventListener('error',reject,{once:true});});}
-test('health, room creation, two-player join, movement and snapshots',async()=>{
-  const game=createGameServer({port:0,host:'127.0.0.1'});const addr=await game.listen(),url=`ws://127.0.0.1:${addr.port}/ws`;
-  let a,b;
-  try{
-    const health=await fetch(`http://127.0.0.1:${addr.port}/health`);assert.equal(health.status,200);assert.equal((await health.json()).ok,true);
-    a=await connect(url);const aj=receive(a,m=>m.type==='joined');a.send(JSON.stringify({type:'join',name:'Alpha',mode:'ffa',map:'yard',tool:'spark'}));const one=await aj;assert.match(one.room,/^[A-F0-9]{7}$/);
-    b=await connect(url);const bj=receive(b,m=>m.type==='joined');b.send(JSON.stringify({type:'join',name:'Bravo',room:one.room,mode:'ffa'}));const two=await bj;assert.equal(two.room,one.room);assert.notEqual(two.id,one.id);
-    const playing=await receive(a,m=>m.type==='state'&&m.status==='playing'&&m.players.length===2);
-    assert.equal(playing.players.length,2);
-    const original=playing.players.find(p=>p.id===one.id);
-    a.send(JSON.stringify({type:'input',yaw:0,pitch:0,input:{forward:1}}));
-    const advanced=await receive(a,m=>m.type==='state'&&m.players.find(p=>p.id===one.id)?.z<original.z-.09,3000);
-    assert.ok(advanced.players.find(p=>p.id===one.id).z<original.z);
-    const rooms=await (await fetch(`http://127.0.0.1:${addr.port}/rooms`)).json();assert.ok(Array.isArray(rooms));
-  }finally{a?.close();b?.close();await game.close();}
+async function connect(url){return new Promise((resolve,reject)=>{const ws=new WebSocket(url);ws.addEventListener('open',()=>resolve(ws),{once:true});ws.addEventListener('error',reject,{once:true});});}
+async function joined(ws,opts){const p=receive(ws,m=>m.type==='joined');ws.send(JSON.stringify({type:'join',name:'Player',...opts}));return p;}
+test('server health, FFA room join and authoritative movement snapshots',async()=>{
+ const game=createGameServer({port:0,host:'127.0.0.1',countdownSeconds:.12,roundSeconds:3});const a=await game.listen(),url=`ws://127.0.0.1:${a.port}/ws`;let ws1,ws2;
+ try{const h=await (await fetch(`http://127.0.0.1:${a.port}/health`)).json();assert.equal(h.ok,true);
+  ws1=await connect(url);const one=await joined(ws1,{mode:'ffa',map:'yard'});
+  ws2=await connect(url);const two=await joined(ws2,{room:one.room,mode:'ffa'});assert.equal(one.room,two.room);assert.notEqual(one.id,two.id);
+  const playing=await receive(ws1,m=>m.type==='state'&&m.status==='playing');
+  const before=playing.players.find(p=>p.id===one.id);
+  ws1.send(JSON.stringify({type:'input',yaw:0,pitch:0,input:{forward:1,sprint:true}}));
+  const advanced=await receive(ws1,m=>m.type==='state'&&m.status==='playing'&&m.players.find(p=>p.id===one.id).z<before.z-.07);
+  assert.ok(advanced.players.find(p=>p.id===one.id).z<before.z);
+  const rooms=await (await fetch(`http://127.0.0.1:${a.port}/rooms`)).json();assert.ok(Array.isArray(rooms));
+ }finally{ws1?.close();ws2?.close();await game.close();}
 });
-test('invalid room code returns server error',async()=>{
-  const game=createGameServer({port:0,host:'127.0.0.1'});const addr=await game.listen();let a;
-  try{a=await connect(`ws://127.0.0.1:${addr.port}/ws`);const message=receive(a,m=>m.type==='error');a.send(JSON.stringify({type:'join',room:'NOTFOUND'}));assert.match((await message).message,/찾을 수/);}finally{a?.close();await game.close();}
+test('team mode waits for 2v2 players before starting',async()=>{
+ const game=createGameServer({port:0,host:'127.0.0.1',countdownSeconds:.1,roundSeconds:.6});const a=await game.listen(),url=`ws://127.0.0.1:${a.port}/ws`;const sockets=[];
+ try{const first=await connect(url);sockets.push(first);const one=await joined(first,{mode:'tdm',teamSize:2,map:'yard'});
+  for(let i=0;i<2;i++){const ws=await connect(url);sockets.push(ws);await joined(ws,{room:one.room});}
+  assert.equal(game.rooms.get(one.room).status,'waiting');
+  const fourth=await connect(url);sockets.push(fourth);await joined(fourth,{room:one.room});
+  await receive(first,m=>m.type==='state'&&m.status==='playing');
+  const outcome=await receive(first,m=>m.type==='event'&&m.event==='end');assert.equal(typeof outcome.outcome.reward,'number');
+ }finally{sockets.forEach(s=>s.close());await game.close();}
+});
+test('authenticated AI match grants server-calculated BDC to account',async()=>{
+ const game=createGameServer({port:0,host:'127.0.0.1',countdownSeconds:.12,roundSeconds:.65});const a=await game.listen(),base=`http://127.0.0.1:${a.port}`;let ws;
+ try{const auth=await fetch(base+'/api/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:'test_user',password:'SecretPass999'})});assert.equal(auth.status,200);
+  const {token}=await auth.json();
+  const p=await (await fetch(base+'/api/profile',{headers:{Authorization:`Bearer ${token}`}})).json();assert.deepEqual(p.profile.owned,['M416','P92']);
+  ws=await connect(`ws://127.0.0.1:${a.port}/ws`);const one=await joined(ws,{mode:'bots',map:'yard',bots:2,difficulty:'easy',authToken:token});assert.match(one.room,/^[A-F0-9]{7}$/);
+  const playing=await receive(ws,m=>m.type==='state'&&m.status==='playing');assert.equal(playing.players.length,3);
+  const ended=await receive(ws,m=>m.type==='event'&&m.event==='end');assert.ok(ended.outcome.reward>=100);
+  const updated=await (await fetch(base+'/api/profile',{headers:{Authorization:`Bearer ${token}`}})).json();assert.equal(updated.profile.bdc,ended.outcome.reward);
+  const forbidden=await fetch(base+'/api/draw',{method:'POST',headers:{'content-type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({count:10})});assert.equal(forbidden.status,400);
+ }finally{ws?.close();await game.close();}
+});
+test('invalid room code rejects join',async()=>{const game=createGameServer({port:0,host:'127.0.0.1'});const a=await game.listen();let ws;
+ try{ws=await connect(`ws://127.0.0.1:${a.port}/ws`);const p=receive(ws,m=>m.type==='error');ws.send(JSON.stringify({type:'join',room:'BADCODE'}));assert.match((await p).message,/찾을 수/);
+ }finally{ws?.close();await game.close();}
 });

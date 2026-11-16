@@ -1,66 +1,60 @@
-<!doctype html>
-<html lang="ko"><head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
-  <meta name="theme-color" content="#111c2e"/><meta name="description" content="BLOCKDASH — 블록형 3D 에너지 태그 아레나"/>
-  <title>BLOCKDASH — TACTICAL ARENA v1.1</title><link rel="stylesheet" href="./src/style.css"/>
-  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
-</head><body>
-<div id="app">
-  <canvas id="game" aria-label="3D 게임 플레이 화면"></canvas>
-  <div id="hud" hidden>
-    <div class="hud-logo">▦ BLOCK<span>DASH</span><small> TACTICAL / 1.1</small></div>
-    <div class="hud-score"><div><small>모드</small><b id="hud-mode">연습장</b></div><div><small>점수</small><b id="hud-score">0</b></div><div><small>남은 시간</small><b id="hud-time">03:00</b></div></div>
-    <div class="hud-map" id="hud-map">BLOCK YARD</div>
-    <div id="feed" role="status" aria-live="polite"></div>
-    <div class="crosshair" id="crosshair"><i></i><i></i><i></i><i></i></div>
-    <div class="shield-area"><small>PROTECTION</small><div class="meter"><div id="shield-bar"></div></div><b id="shield-label">100</b><span id="life-status"></span></div>
-    <div class="tool-area"><small id="tool-name">SPARK</small><div class="meter"><div id="energy-bar"></div></div><b id="energy-label">100</b><span id="hud-speed">0.0 m/s</span></div>
-    <button id="copy-room" class="hud-copy" hidden>방 코드 복사</button><button id="scoreboard-button" class="hud-board">순위</button>
-    <button id="pause-button" class="hud-pause" aria-label="게임 일시정지">Ⅱ</button>
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#1b1f24"><meta name="description" content="BLOCKDASH — 로우폴리 3D 아레나 게임">
+<title>BLOCKDASH · Arena v2.1</title><link rel="stylesheet" href="./src/style.css?v=210">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script></head>
+<body><div id="app">
+<canvas id="game" aria-label="3D 게임 화면"></canvas>
+<div id="hud" hidden>
+  <div class="hud-top"><div class="hud-brand">▦ BLOCK<span>DASH</span></div><div class="hud-score"><div><small>모드</small><b id="hud-mode">연습</b></div><div><small>점수</small><b id="hud-score">0</b></div><div><small>남은 시간</small><b id="hud-time">06:00</b></div></div><div class="hud-actions"><button class="mini" id="copy-room" hidden>방 코드</button><button class="mini" id="scoreboard-button">순위</button><button class="mini" id="pause-button" aria-label="일시 정지">Ⅱ</button></div></div>
+  <div class="crosshair" id="crosshair"><span class="cross-top"></span><span class="cross-bottom"></span><span class="cross-left"></span><span class="cross-right"></span></div>
+  <div class="hitmarker" id="hitmarker" aria-hidden="true">✕</div><div class="hurt" id="hurt"></div><div class="notice" id="notice"></div><div id="feed" class="kill-feed"></div>
+  <div class="hud-bottom"><div class="hp-box"><small>체력</small><div class="hp-value"><strong id="hp-value">100</strong><span>/100</span></div><div class="hp-track"><div id="hp-fill"></div></div><div id="life-status" class="micro"></div></div>
+  <div class="weapon-box"><div class="active-weapon"><small id="weapon-kind">AR · 일반</small><strong id="weapon-name">M416</strong><div class="ammo"><b id="ammo-current">40</b><span>/ <span id="ammo-max">40</span></span></div></div><div class="weapon-secondary"><span id="secondary-name">P92</span><span id="reload-status"> </span></div></div></div>
+  <div class="map-label" id="hud-map">BLOCK YARD</div>
+</div>
+<div id="scoreboard" class="scoreboard" hidden><h3>순위</h3><div id="scoreboard-list"></div></div>
+<div id="mobile-controls" hidden>
+  <div id="joy-zone" class="movable" data-control="joy-zone" aria-label="이동 스틱"><div id="joy-ring"><div id="joy-knob"></div></div></div>
+  <div id="look-zone" aria-label="시점 조작"></div>
+  <button id="fire-button" class="touch fire movable" data-control="fire-button">발사</button>
+  <button id="ads-button" class="touch movable" data-control="ads-button">조준</button>
+  <button id="jump-button" class="touch movable" data-control="jump-button">점프</button>
+  <button id="slide-button" class="touch movable" data-control="slide-button">슬라이드</button>
+  <button id="crouch-button" class="touch movable" data-control="crouch-button">앉기</button>
+  <button id="reload-button" class="touch movable" data-control="reload-button">재장전</button>
+  <button id="swap-button" class="touch movable" data-control="swap-button">교체</button><button id="scope-button" class="touch movable" data-control="scope-button">배율</button>
+</div>
+<div id="overlay" class="overlay">
+ <div class="lobby"><header class="lobby-header"><div class="logo">▦ BLOCK<span>DASH</span><small>ARENA / 2.1</small></div><div class="header-actions"><div class="balance">BDC <b id="bdc-balance">0</b></div><button class="small-button" id="account-toggle">계정</button><button class="small-button" id="settings-toggle">설정</button></div></header>
+ <div class="lobby-main"><section class="hero"><div class="eyebrow">TACTICAL ARENA</div><h1>BLOCK<br><em>DASH</em></h1><p>들어가서, 움직이고, 점수를 올려.</p><div class="hero-cube"><div class="cube-grid"></div><div class="hero-ring"></div><div class="hero-avatar"><i class="face"></i><i class="chest"></i><i class="leg one"></i><i class="leg two"></i></div></div><div class="hero-info"><span>MAPS <b>02</b></span><span>MODES <b>04</b></span><span>WEAPONS <b>20</b></span></div></section>
+ <section class="panel"><div class="panel-heading"><div class="eyebrow">게임 설정</div><h2>경기 준비</h2></div>
+  <label class="field-label" for="nickname">닉네임</label><input id="nickname" maxlength="16" value="PLAYER" autocomplete="nickname">
+  <div class="field-label">모드 선택</div><div class="mode-grid" id="mode-grid">
+   <button class="mode-card selected" data-mode="practice"><strong>연습</strong><span>표적을 맞히는 연습장</span></button>
+   <button class="mode-card" data-mode="bots"><strong>AI 대전</strong><span>최대 7명의 AI</span></button>
+   <button class="mode-card" data-mode="ffa"><strong>개인전</strong><span>온라인 · 최대 8명</span></button>
+   <button class="mode-card" data-mode="tdm"><strong>팀전</strong><span>온라인 · 최대 4대4</span></button>
   </div>
-  <div id="match-board" hidden><h3>현재 순위</h3><div id="board-list"></div></div>
-  <div id="mobile-controls" hidden>
-    <div id="joy-zone" aria-label="이동 조이스틱"><div id="joy-ring"><div id="joy-knob"></div></div></div>
-    <div id="look-zone" aria-label="시점 이동"></div>
-    <button id="tag-button" class="touch-button tag-button" aria-label="TAG">TAG</button>
-    <button id="jump-button" class="touch-button jump-button" aria-label="점프">↥<small>점프</small></button>
-    <button id="slide-button" class="touch-button slide-button" aria-label="슬라이드">↘<small>슬라이드</small></button>
-    <button id="change-button" class="touch-button change-button" aria-label="장비 변경">⇄<small>장비</small></button>
-  </div>
-  <div id="overlay" class="overlay">
-    <div class="lobby-shell">
-      <header class="lobby-header"><div class="logo"><span class="logo-mark">▦</span> BLOCK<span>DASH</span><small>TACTICAL ARENA / V1.1</small></div><div class="header-actions"><span class="online-status" id="connection-badge">● 오프라인 플레이 가능</span><button id="settings-toggle" class="small-button">⚙ 설정</button></div></header>
-      <div class="lobby-columns">
-        <section class="hero-panel">
-          <div class="eyebrow">TACTICAL ARENA / MATCH READY</div>
-          <h1>ENTER THE<br/><em>ARENA.</em></h1>
-          <p>FAST MOVEMENT. SHARP FOCUS. NO SECOND CHANCES.</p>
-          <div id="preview-character" class="character-preview"><div class="character-face"><span class="eye"></span></div><div class="character-torso"></div><div class="character-feet"><i></i><i></i></div></div>
-          <div class="info-row"><div><small>MAPS</small><strong>02</strong></div><div><small>MODES</small><strong>05</strong></div><div><small>TAG TOOLS</small><strong>03</strong></div></div>
-        </section>
-        <section class="control-panel">
-          <div class="section-top"><div><small>GAME SETUP</small><h2 id="panel-title">MATCH SETUP</h2></div><span id="lobby-notice">싱글플레이는 서버 없이 실행</span></div>
-          <label class="field-label" for="nickname">닉네임 (게스트)</label><input id="nickname" maxlength="16" autocomplete="off" value="PLAYER"/>
-          <div class="field-label">게임 모드</div><div class="mode-grid" id="mode-grid">
-            <button class="mode-card selected" data-mode="practice"><b>◎ 연습장</b><small>표적 맞히기</small></button>
-            <button class="mode-card" data-mode="bots"><b>◉ AI 대전</b><small>봇과 점수 경쟁</small></button>
-            <button class="mode-card" data-mode="ffa"><b>◆ 개인전</b><small>온라인 2~8명</small></button>
-            <button class="mode-card" data-mode="tdm"><b>▣ 팀전</b><small>온라인 팀 대결</small></button>
-            <button class="mode-card wide" data-mode="parkour"><b>◇ 파쿠르</b><small>체크포인트 기록 도전</small></button>
-          </div>
-          <div class="selection-row"><label>맵<select id="map-select"><option value="yard">BLOCK YARD</option><option value="sky">SKY GRID</option></select></label><label>장비<select id="tool-select"><option value="spark">SPARK · 연속형</option><option value="prism">PRISM · 정밀형</option><option value="pulse">PULSE · 근거리형</option></select></label></div>
-          <div class="selection-row" id="ai-options"><label>AI 난이도<select id="difficulty-select"><option value="easy">쉬움</option><option value="normal" selected>보통</option><option value="hard">어려움</option></select></label><label>AI 수<select id="bot-count"><option value="1">1명</option><option value="2">2명</option><option value="3" selected>3명</option><option value="4">4명</option><option value="5">5명</option></select></label></div>
-          <div id="network-options" hidden><label class="field-label" for="server-url">서버 주소 · 고급 설정 (wss://)</label><input id="server-url" placeholder="wss://your-game-server.example" autocomplete="off"/><div class="selection-row"><label>초대 코드 (참가 시)<input id="room-code" placeholder="비워 두면 새 방" maxlength="9" autocomplete="off"/></label><label>방 종류<select id="room-privacy"><option value="private">비공개</option><option value="public">공개</option></select></label></div></div>
-          <div class="action-row"><button class="primary-button" id="play-button">▶ DEPLOY / 게임 시작</button><button class="outline-button" id="stats-toggle">▤ 내 기록</button></div>
-          <div id="lobby-message" class="lobby-message" role="status"></div>
-        </section>
-      </div>
-      <footer class="lobby-footer"><span>PC: WASD · Shift · Space · C · 클릭 / 1–3 장비</span><span>아이패드: 스틱 · 시점 드래그 · TAG · 점프 · 슬라이드</span></footer>
-    </div>
-  </div>
-  <div class="modal-backdrop" id="settings-modal" hidden><section class="modal"><div class="modal-header"><h2>게임 설정</h2><button class="modal-close" data-close="settings-modal">✕</button></div><label>마우스 감도<input type="range" id="mouse-sensitivity" min="0.5" max="3" step="0.1" value="1"/></label><label>터치 감도<input type="range" id="touch-sensitivity" min="0.5" max="3" step="0.1" value="1"/></label><label>시야각(FOV)<input type="range" id="fov" min="65" max="105" step="1" value="80"/></label><label>그래픽 품질<select id="quality"><option value="low">낮음</option><option value="medium" selected>보통</option><option value="high">높음</option></select></label><label>효과음 <input type="checkbox" id="sound-toggle" checked/></label><div class="modal-help">터치패드 동시 입력이 막히면 Windows 터치패드 민감도를 확인하세요. 설정은 이 기기에 저장됩니다.</div></section></div>
-  <div class="modal-backdrop" id="stats-modal" hidden><section class="modal"><div class="modal-header"><h2>내 기록</h2><button class="modal-close" data-close="stats-modal">✕</button></div><div id="stats-content"></div><p class="modal-help">현재는 브라우저별 게스트 기록입니다. 로그인·기기 간 기록 동기화는 서버 인증 연결 후 지원됩니다.</p></section></div>
-  <div id="error" class="error-banner" hidden></div>
-  <div id="orientation-note">가로 화면에서 플레이하면 더 편리합니다.</div>
-</div><script type="module" src="./src/app.js?v=110t1" onerror="document.getElementById('error').hidden=false;document.getElementById('error').textContent='게임 파일 또는 3D 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요.'"></script>
-</body></html>
+  <div class="selection-row"><label>맵<select id="map-select"><option value="yard">BLOCK YARD</option><option value="sky">SKY GRID</option></select></label><label>주무기<select id="primary-select"></select></label></div>
+  <div class="selection-row"><label>보조무기<select id="secondary-select"></select></label><label>AI 난이도<select id="difficulty-select"><option value="easy">쉬움</option><option value="normal" selected>보통</option><option value="hard">어려움</option></select></label></div>
+  <div class="selection-row" id="ai-row"><label>AI 수<select id="bot-count"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label><div class="muted-field">한 경기 6분 · 체력 100</div></div>
+  <div id="online-fields" hidden><div class="selection-row" id="team-size-row" hidden><label>팀 규모<select id="team-size"><option value="2">2대2</option><option value="3">3대3</option><option value="4">4대4</option></select></label></div><label class="field-label" for="server-url">서버 주소 (wss://)</label><input id="server-url" placeholder="wss://서버주소/ws" inputmode="url"><div class="selection-row"><label>방 코드<input id="room-code" placeholder="새 방은 비워 두기" maxlength="9"></label><label>방 공개<select id="room-privacy"><option value="private">비공개</option><option value="public">공개</option></select></label></div></div>
+  <div class="main-actions"><button id="play-button" class="primary">경기 시작 <span>↗</span></button><button id="shop-toggle" class="secondary">무기 상자</button></div>
+  <div class="support-actions"><button id="inventory-toggle">보유 무기</button><button id="stats-toggle">내 기록</button><span id="account-status">게스트</span></div><div id="lobby-message" class="lobby-message" role="status"></div>
+ </section></div><footer class="lobby-footer"><span>PC: WASD 이동 · Shift 달리기 · C 슬라이드 · R 재장전 · 1/2 무기</span><span>iPad: 터치 버튼 위치·크기 변경 가능</span></footer></div>
+</div>
+<div class="modal-bg" id="shop-modal" hidden><div class="modal wide"><div class="modal-head"><div><div class="eyebrow">ARMORY</div><h2>무기 상자</h2></div><button class="close" data-close="shop-modal">✕</button></div><p class="subtle">게임에서 얻은 BDC로 열 수 있어. 현금 결제는 없어.</p><div class="crate-display"><div class="crate-model"><div class="crate-lid"></div><div class="crate-body">▦</div></div><div><small>보유 BDC</small><div class="big-balance" id="shop-balance">0</div></div></div><div class="loot-buttons"><button class="primary" id="draw-one">1회 열기 <b>700 BDC</b></button><button class="secondary" id="draw-ten">10회 열기 <b>6,000 BDC</b></button></div><div class="odds"><span>일반 70%</span><span>희귀 25%</span><span>영웅 4.5%</span><span>전설 0.5%</span></div><div class="subtle">중복 획득 시 +350 BDC · 10회 확정 보상 없음</div><div class="lobby-message" id="shop-message"></div></div></div>
+<div class="modal-bg" id="inventory-modal" hidden><div class="modal wide"><div class="modal-head"><h2>보유 무기</h2><button class="close" data-close="inventory-modal">✕</button></div><div id="inventory-list" class="inventory-grid"></div></div></div>
+<div class="modal-bg" id="settings-modal" hidden><div class="modal"><div class="modal-head"><h2>설정</h2><button class="close" data-close="settings-modal">✕</button></div>
+<label class="control-setting">마우스 감도 <input id="mouse-sensitivity" type="range" min="0.5" max="3" step="0.1" value="1"></label><label class="control-setting">터치 감도 <input id="touch-sensitivity" type="range" min="0.5" max="3" step="0.1" value="1"></label><label class="control-setting">FOV <input id="fov" type="range" min="70" max="110" step="1" value="90"></label>
+<label class="control-setting">그래픽 품질 <select id="quality"><option value="low">낮음</option><option value="medium" selected>보통</option><option value="high">높음</option></select></label><label class="control-setting">FPS 제한 <select id="fps-cap"><option value="30">30</option><option value="60" selected>60</option><option value="120">120</option><option value="0">무제한</option></select></label>
+<label class="control-setting">화면 흔들림 <input id="shake" type="range" min="0" max="1" step="0.1" value="0.5"></label><label class="control-setting">효과음 <input id="sound-toggle" type="checkbox" checked></label>
+<button id="edit-controls" class="secondary full">아이패드 버튼 위치·크기 편집</button><div class="subtle">버튼을 끌어서 이동하고, +/−로 크기를 조정해. 편집은 게임 화면에서 진행해.</div></div></div>
+<div class="modal-bg" id="stats-modal" hidden><div class="modal"><div class="modal-head"><h2>내 기록</h2><button class="close" data-close="stats-modal">✕</button></div><div id="stats-content"></div></div></div>
+<div class="modal-bg" id="account-modal" hidden><div class="modal"><div class="modal-head"><h2>계정</h2><button class="close" data-close="account-modal">✕</button></div><div class="subtle">게스트 기록은 현재 브라우저에 저장돼. 계정 연결은 별도 게임 서버가 필요해.</div><label class="field-label" for="account-server">계정 서버 주소</label><input id="account-server" placeholder="https://서버주소"><label class="field-label" for="account-name">아이디</label><input id="account-name" autocomplete="username" maxlength="24"><label class="field-label" for="account-password">비밀번호</label><input id="account-password" type="password" autocomplete="current-password" maxlength="128"><div class="loot-buttons"><button class="primary" id="login-button">로그인</button><button class="secondary" id="register-button">회원가입</button></div><button class="text-button" id="logout-button" hidden>로그아웃</button><div class="lobby-message" id="account-message"></div></div></div>
+<div class="modal-bg" id="result-modal" hidden><div class="modal result"><div class="result-title" id="result-title">경기 종료</div><div class="result-reason" id="result-reason"></div><div class="result-metrics" id="result-metrics"></div><div class="reward-line" id="reward-line"></div><div class="loot-buttons"><button class="primary" id="result-again">다시 시작</button><button class="secondary" id="result-lobby">로비</button></div></div></div>
+<div id="cinematic" class="cinematic" hidden><canvas id="cinematic-canvas"></canvas><div class="cinematic-shade"></div><div class="cinematic-content"><div id="cinematic-label" class="cinematic-label">무기 상자</div><h2 id="cinematic-title">개봉 중</h2><div id="cinematic-subtitle" class="cinematic-subtitle"></div><div class="cinematic-grid" id="cinematic-grid"></div></div><button id="cinematic-skip" class="cinematic-skip">결과 보기</button><button id="cinematic-done" class="primary cinematic-done" hidden>확인</button></div>
+<div id="edit-control-bar" class="edit-control-bar" hidden><span>버튼 편집</span><button id="size-down">−</button><button id="size-up">+</button><button id="edit-control-done">완료</button></div>
+<div id="error" class="error" hidden></div><div class="orientation-note">가로 화면에서 플레이하면 더 편해.</div>
+</div><script type="module" src="./src/app.js?v=210" onerror="document.getElementById('error').hidden=false;document.getElementById('error').textContent='게임 파일을 불러오지 못했어. 인터넷 연결을 확인해줘.'"></script></body></html>
