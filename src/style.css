@@ -8,3 +8,43 @@
 @media(orientation:portrait) and (pointer:coarse){#orientation-note{display:block;position:fixed;z-index:8;bottom:0;width:100%;text-align:center;padding:6px;background:#0d2135b9;font-size:11px;pointer-events:none}.tag-button{bottom:133px}.jump-button{right:110px;bottom:225px}.slide-button{right:112px;bottom:133px}.change-button{right:30px;bottom:230px}}
 
 .hud-board,.hud-copy{position:absolute;right:60px;top:15px;pointer-events:auto;border:1px solid #ffffff77;background:#19374cc4;color:#e9faff;border-radius:10px;height:34px;padding:0 12px;font-size:12px}.hud-copy{right:113px}#match-board{position:fixed;top:58px;right:15px;z-index:11;min-width:260px;max-width:350px;border-radius:15px;background:#11283cec;box-shadow:0 12px 36px #0006;border:1px solid #addcef77;padding:16px}#match-board h3{font-size:15px;margin:2px 0 11px}#board-list{display:grid;gap:7px}.board-row{display:flex;justify-content:space-between;gap:14px;color:#d2eaf3;background:#ffffff0c;padding:7px 10px;border-radius:7px;font-size:12px}.board-row b{font-variant-numeric:tabular-nums;color:#fff}.board-row.mine{border:1px solid #7ae6f0}@media(max-width:760px){.hud-board{top:45px;right:8px;height:28px;font-size:10px}.hud-copy{top:45px;right:58px;height:28px;font-size:10px}#match-board{top:85px;right:8px}}
+
+/* BLOCKDASH 1.1 — tactical art direction: sharp industrial surfaces */
+:root{--cyan:#ef913c;--dark:#101318;--muted:#9da5af;color:#e9edf1;background:#0d1015;font-family:"Arial Narrow","Roboto Condensed",Inter,"Apple SD Gothic Neo",system-ui,sans-serif}
+.overlay{background:linear-gradient(90deg,#080b0ff2,#10151be8 50%,#10151bef),repeating-linear-gradient(0deg,transparent 0 3px,#ffffff05 4px 5px);padding:0}
+.lobby-shell{width:min(1500px,100%);min-height:min(94vh,860px);border:1px solid #59606b88;border-radius:0;background:#14191eea;box-shadow:0 20px 110px #000c}
+.lobby-header{padding:20px 34px;border-bottom:2px solid #d97b2f;background:#0c1015d9}
+.logo{font-family:Impact,"Arial Narrow",sans-serif;font-size:31px;letter-spacing:1px}
+.logo span:not(.logo-mark){color:#ed873b}.logo-mark{background:#e38236;color:#15191f;border:0;border-radius:0;clip-path:polygon(0 0,100% 0,100% 80%,80% 100%,0 100%)}
+.logo small{font-family:system-ui,sans-serif;color:#a9abb0;letter-spacing:2.4px;margin-left:48px}
+.lobby-columns{grid-template-columns:1.15fr .85fr}
+.hero-panel{min-height:660px;background:linear-gradient(90deg,#0b0e11c7,#151a20a6),radial-gradient(ellipse at 70% 65%,#a65b245e,transparent 52%),linear-gradient(130deg,#343c43,#11161d 75%);padding:62px 46px 32px;isolation:isolate}
+.hero-panel:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.6;background:repeating-linear-gradient(90deg,transparent 0 79px,#03050650 80px 83px,transparent 84px 180px),linear-gradient(0deg,#080b0d 0 16%,transparent 17% 100%);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.hero-panel:after{content:"";position:absolute;right:4%;bottom:20%;width:42%;height:42%;border:12px solid #65707a24;transform:skewY(-17deg);box-shadow:-40px 55px 0 #0003,20px -70px 0 #e1842813;z-index:-1}
+.eyebrow,.section-top small{color:#e79550;font-size:11px;letter-spacing:3px}
+.hero-panel h1{font-family:Impact,"Arial Narrow",sans-serif;font-size:clamp(62px,7vw,108px);letter-spacing:1px;line-height:.96;margin:24px 0;text-transform:uppercase;text-shadow:0 5px 20px #000a}
+.hero-panel h1 em{color:#e98739}
+.hero-panel p{font-size:12px;letter-spacing:2px;font-weight:800;color:#c2c7cd;max-width:340px;line-height:1.9}
+.character-preview{transform:rotate(-5deg) scale(1.12);filter:drop-shadow(25px 24px 7px #000b)}
+.character-face{background:#525d66;border-color:#aab2b7;border-radius:3px}.character-torso{background:#424d56;border-color:#222a31;border-radius:3px}.character-feet i{background:#323a43;border-radius:2px}
+.info-row{border-color:#8b542e80}.info-row small{color:#aaaeb3}.info-row strong{font-family:Impact,sans-serif;font-size:28px}
+.control-panel{padding:31px 32px;background:linear-gradient(130deg,#1a2028,#11161d);max-height:min(85vh,800px)}
+.section-top h2{font-family:Impact,"Arial Narrow",sans-serif;font-size:30px;letter-spacing:1.5px}
+.section-top>span{color:#9da5aa}.field-label{color:#b9bfc7;text-transform:uppercase;letter-spacing:1px}
+input:not([type="range"]):not([type="checkbox"]),select{border-radius:0;background:#0d1218;border:1px solid #46505b;padding:12px 13px}
+input:focus,select:focus{border-color:#ed8c42}
+.mode-card{border-radius:0;background:#222a33;border-color:#46505b;clip-path:polygon(0 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%);min-height:72px;transition:background .15s,border-color .15s}
+.mode-card:hover{background:#303c48}.mode-card.selected{background:linear-gradient(105deg,#8a4a23,#4a3427);border-color:#ef984e;box-shadow:inset 4px 0 #f2a35b}
+.mode-card b{font-size:14px;letter-spacing:.3px}.mode-card small{color:#b6bdc4}
+.primary-button{background:#e98635;color:#10151a;border-radius:0;clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);font-family:Impact,"Arial Narrow",sans-serif;letter-spacing:1px;font-size:21px}
+.primary-button:hover{background:#ffac5d}
+.small-button,.outline-button{border-radius:0;background:#262e38;border-color:#596371;color:#e5e7ea}
+.lobby-footer{background:#0b0e12;color:#7f8995;text-transform:uppercase;letter-spacing:.5px}
+.hud-logo span{color:#f39749}.hud-score>div,.shield-area,.tool-area,.hud-map,.hud-pause,.hud-board,.hud-copy,#match-board{border-radius:0;background:#0d1117c9;border-color:#7b879362}
+.hud-score>div{border-top:2px solid #e08a41}.hud-score b{font-family:Impact,sans-serif;letter-spacing:1px;font-size:24px}
+.meter{border-radius:0;background:#303841}.meter>div{background:#eb914a}.tool-area .meter>div{background:#f4b35f}
+.crosshair i,.crosshair:before{background:#fff;border-radius:0}
+.tag-button{background:#dc8439e6;color:#11151b}.touch-button{border-radius:8px;background:#27303bd9}.tag-button{background:#dd8538}
+.modal{border-radius:0;background:#151b22;border-color:#6b727a}.stat-grid>div{border-radius:0;background:#252c35}
+@media(max-width:800px){.lobby-columns{grid-template-columns:1fr}.hero-panel{min-height:165px;padding:22px 25px}.hero-panel h1{font-size:43px;margin:8px 0}.hero-panel p{font-size:10px}.control-panel{max-height:none}.lobby-shell{min-height:100vh}.lobby-header{padding:13px 18px}}
+@media(max-height:600px){.hero-panel{min-height:0;padding:13px 22px}.hero-panel h1{font-size:34px;margin:5px 0}.control-panel{padding:13px 19px}}

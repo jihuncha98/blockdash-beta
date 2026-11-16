@@ -69,6 +69,7 @@ function setTool(tool){
   if(!TOOLS[tool])return;options.tool=tool;$('tool-select').value=tool;
   if(network?.connected)network.send({type:'tool',tool});
   $('tool-name').textContent=TOOLS[tool].name;
+  world?.setToolVisual(tool);
   feed(`${TOOLS[tool].name} 선택`,.9);
 }
 function cycleTool(){setTool(toolKeys[(toolKeys.indexOf(options.tool)+1)%toolKeys.length]);}
@@ -76,7 +77,7 @@ function beginGame(online=false,joined=null){
   state='playing';roundRecorded=false;timeLeft=online?ROUND_TIME:options.mode==='practice'?90:ROUND_TIME;elapsed=0;score=0;parkourIndex=0;tagCooldown=0;sendTimer=0;renderTime=0;
   if(online&&joined){options.map=joined.map;options.mode=joined.mode;roomCode=joined.room;myId=joined.id;}
   const map=MAPS[options.map];const spawn=map.spawn[0];player=makePlayer(spawn[0],spawn[1]);player.yaw=0;player.pitch=0;
-  world.build(options.map,options.mode);world.setFov(settings.fov);
+  world.build(options.map,options.mode);world.setFov(settings.fov);world.setToolVisual(options.tool);
   ai=options.mode==='bots'?new AIManager(options.map,options.difficulty,options.bots):null;
   remote.clear();snapshot=null;
   if(ai){for(const bot of ai.bots)world.makeAvatar(bot.id,bot.name,bot.color);}

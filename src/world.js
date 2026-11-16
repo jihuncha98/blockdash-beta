@@ -11,6 +11,7 @@ export class World {
     this.scene=new THREE.Scene();
     this.camera=new THREE.PerspectiveCamera(80,1,.05,180);
     this.camera.rotation.order='YXZ';
+    this.toolView=new THREE.Group();this.toolView.position.set(.39,-.35,-.65);this.camera.add(this.toolView);this.scene.add(this.camera);this.setToolVisual('spark');
     this.scene.add(new THREE.HemisphereLight('#e3f3ff','#476078',2.35));
     this.sun=new THREE.DirectionalLight('#ffe6ba',2.2);this.sun.position.set(-22,43,17);this.scene.add(this.sun);
     this.root=new THREE.Group();this.scene.add(this.root);
@@ -27,6 +28,26 @@ export class World {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio||1,cap));
   }
   setQuality(value){this.quality=value;this.resize();}
+  setToolVisual(type='spark'){
+    if(!this.toolView)return;
+    for(const mesh of [...this.toolView.children]){this.toolView.remove(mesh);mesh.geometry?.dispose();mesh.material?.dispose();}
+    const palettes={spark:['#424a51','#e68a3e'],prism:['#3d4657','#a18ae5'],pulse:['#4c4540','#f0ac53']};
+    const [body,trim]=palettes[type]||palettes.spark;
+    const steel=new THREE.MeshStandardMaterial({color:body,metalness:.65,roughness:.38,depthTest:false});
+    const accent=new THREE.MeshStandardMaterial({color:trim,metalness:.3,roughness:.35,emissive:trim,emissiveIntensity:.12,depthTest:false});
+    const dark=new THREE.MeshStandardMaterial({color:'#151a20',metalness:.45,roughness:.58,depthTest:false});
+    const add=(w,h,d,x,y,z,mat)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);o.position.set(x,y,z);o.renderOrder=20;this.toolView.add(o);return o;};
+    // Decorative sci-fi tag device: non-functional stylized game geometry.
+    add(.24,.18,.67,0,0,-.16,steel);
+    add(.19,.09,.3,0,.13,-.13,accent);
+    add(.13,.24,.16,.01,-.18,.03,dark);
+    add(.22,.07,.2,0,-.11,-.17,steel);
+    add(.11,.11,type==='prism'?.53:.32,0,.01,-.57,dark);
+    add(.15,.07,.09,0,.13,-.48,accent);
+    if(type==='prism'){add(.11,.1,.22,0,.23,-.12,dark);add(.06,.05,.09,0,.3,-.12,accent);}
+    if(type==='pulse'){add(.3,.17,.15,0,0,-.45,steel);add(.27,.05,.1,0,.13,-.42,accent);}
+    if(type==='spark'){add(.15,.07,.18,0,.14,.08,dark);}
+  }
   setFov(value){this.camera.fov=value;this.camera.updateProjectionMatrix();}
   clear(){
     this.root.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const a=Array.isArray(o.material)?o.material:[o.material];for(const m of a)m.dispose();}});

@@ -2,13 +2,13 @@
 <html lang="ko"><head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
   <meta name="theme-color" content="#111c2e"/><meta name="description" content="BLOCKDASH — 블록형 3D 에너지 태그 아레나"/>
-  <title>BLOCKDASH — 3D 아레나 v1.0</title><link rel="stylesheet" href="./src/style.css"/>
+  <title>BLOCKDASH — TACTICAL ARENA v1.1</title><link rel="stylesheet" href="./src/style.css"/>
   <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
 </head><body>
 <div id="app">
   <canvas id="game" aria-label="3D 게임 플레이 화면"></canvas>
   <div id="hud" hidden>
-    <div class="hud-logo">▦ BLOCK<span>DASH</span><small> BETA 1.0</small></div>
+    <div class="hud-logo">▦ BLOCK<span>DASH</span><small> TACTICAL / 1.1</small></div>
     <div class="hud-score"><div><small>모드</small><b id="hud-mode">연습장</b></div><div><small>점수</small><b id="hud-score">0</b></div><div><small>남은 시간</small><b id="hud-time">03:00</b></div></div>
     <div class="hud-map" id="hud-map">BLOCK YARD</div>
     <div id="feed" role="status" aria-live="polite"></div>
@@ -29,17 +29,17 @@
   </div>
   <div id="overlay" class="overlay">
     <div class="lobby-shell">
-      <header class="lobby-header"><div class="logo"><span class="logo-mark">▦</span> BLOCK<span>DASH</span><small>ARENA / V1.0 BETA</small></div><div class="header-actions"><span class="online-status" id="connection-badge">● 오프라인 플레이 가능</span><button id="settings-toggle" class="small-button">⚙ 설정</button></div></header>
+      <header class="lobby-header"><div class="logo"><span class="logo-mark">▦</span> BLOCK<span>DASH</span><small>TACTICAL ARENA / V1.1</small></div><div class="header-actions"><span class="online-status" id="connection-badge">● 오프라인 플레이 가능</span><button id="settings-toggle" class="small-button">⚙ 설정</button></div></header>
       <div class="lobby-columns">
         <section class="hero-panel">
-          <div class="eyebrow">FAST MOVEMENT · SMART PLAYS</div>
-          <h1>움직임이<br/><em>승부를 바꾼다.</em></h1>
-          <p>블록형 3D 맵에서 달리고, 점프하고, 슬라이드하며 홀로그램 표적을 태그하세요.</p>
+          <div class="eyebrow">TACTICAL ARENA / MATCH READY</div>
+          <h1>ENTER THE<br/><em>ARENA.</em></h1>
+          <p>FAST MOVEMENT. SHARP FOCUS. NO SECOND CHANCES.</p>
           <div id="preview-character" class="character-preview"><div class="character-face"><span class="eye"></span></div><div class="character-torso"></div><div class="character-feet"><i></i><i></i></div></div>
           <div class="info-row"><div><small>MAPS</small><strong>02</strong></div><div><small>MODES</small><strong>05</strong></div><div><small>TAG TOOLS</small><strong>03</strong></div></div>
         </section>
         <section class="control-panel">
-          <div class="section-top"><div><small>GAME SETUP</small><h2 id="panel-title">게임 시작</h2></div><span id="lobby-notice">싱글플레이는 서버 없이 실행</span></div>
+          <div class="section-top"><div><small>GAME SETUP</small><h2 id="panel-title">MATCH SETUP</h2></div><span id="lobby-notice">싱글플레이는 서버 없이 실행</span></div>
           <label class="field-label" for="nickname">닉네임 (게스트)</label><input id="nickname" maxlength="16" autocomplete="off" value="PLAYER"/>
           <div class="field-label">게임 모드</div><div class="mode-grid" id="mode-grid">
             <button class="mode-card selected" data-mode="practice"><b>◎ 연습장</b><small>표적 맞히기</small></button>
@@ -50,8 +50,8 @@
           </div>
           <div class="selection-row"><label>맵<select id="map-select"><option value="yard">BLOCK YARD</option><option value="sky">SKY GRID</option></select></label><label>장비<select id="tool-select"><option value="spark">SPARK · 연속형</option><option value="prism">PRISM · 정밀형</option><option value="pulse">PULSE · 근거리형</option></select></label></div>
           <div class="selection-row" id="ai-options"><label>AI 난이도<select id="difficulty-select"><option value="easy">쉬움</option><option value="normal" selected>보통</option><option value="hard">어려움</option></select></label><label>AI 수<select id="bot-count"><option value="1">1명</option><option value="2">2명</option><option value="3" selected>3명</option><option value="4">4명</option><option value="5">5명</option></select></label></div>
-          <div id="network-options" hidden><label class="field-label" for="server-url">게임 서버 주소 (wss://)</label><input id="server-url" placeholder="wss://your-game-server.example" autocomplete="off"/><div class="selection-row"><label>초대 코드 (참가 시)<input id="room-code" placeholder="비워 두면 새 방" maxlength="9" autocomplete="off"/></label><label>방 종류<select id="room-privacy"><option value="private">비공개</option><option value="public">공개</option></select></label></div></div>
-          <div class="action-row"><button class="primary-button" id="play-button">▶ 게임 시작</button><button class="outline-button" id="stats-toggle">▤ 내 기록</button></div>
+          <div id="network-options" hidden><label class="field-label" for="server-url">서버 주소 · 고급 설정 (wss://)</label><input id="server-url" placeholder="wss://your-game-server.example" autocomplete="off"/><div class="selection-row"><label>초대 코드 (참가 시)<input id="room-code" placeholder="비워 두면 새 방" maxlength="9" autocomplete="off"/></label><label>방 종류<select id="room-privacy"><option value="private">비공개</option><option value="public">공개</option></select></label></div></div>
+          <div class="action-row"><button class="primary-button" id="play-button">▶ DEPLOY / 게임 시작</button><button class="outline-button" id="stats-toggle">▤ 내 기록</button></div>
           <div id="lobby-message" class="lobby-message" role="status"></div>
         </section>
       </div>
@@ -62,5 +62,5 @@
   <div class="modal-backdrop" id="stats-modal" hidden><section class="modal"><div class="modal-header"><h2>내 기록</h2><button class="modal-close" data-close="stats-modal">✕</button></div><div id="stats-content"></div><p class="modal-help">현재는 브라우저별 게스트 기록입니다. 로그인·기기 간 기록 동기화는 서버 인증 연결 후 지원됩니다.</p></section></div>
   <div id="error" class="error-banner" hidden></div>
   <div id="orientation-note">가로 화면에서 플레이하면 더 편리합니다.</div>
-</div><script type="module" src="./src/app.js?v=100b1" onerror="document.getElementById('error').hidden=false;document.getElementById('error').textContent='게임 파일 또는 3D 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요.'"></script>
+</div><script type="module" src="./src/app.js?v=110t1" onerror="document.getElementById('error').hidden=false;document.getElementById('error').textContent='게임 파일 또는 3D 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요.'"></script>
 </body></html>
